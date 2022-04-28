@@ -5,35 +5,69 @@ class WalkThroughPage extends StatefulWidget {
   const WalkThroughPage({
     Key? key,
     required this.walkThroughList,
+    required this.onPressed,
   }) : super(key: key);
   final List<WalkThroughModel> walkThroughList;
+  final VoidCallback onPressed;
+
   @override
   _WalkThroughPageState createState() => _WalkThroughPageState();
 }
 
 class _WalkThroughPageState extends State<WalkThroughPage> {
+  PageController pageViewController = PageController(initialPage: 0);
+
   //TODO: Controller to control all page view
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageView.builder(
+        controller: pageViewController,
+        physics: const NeverScrollableScrollPhysics(),
         itemCount: widget.walkThroughList.length,
         itemBuilder: (context, index) {
           WalkThroughModel walkThroughModel = widget.walkThroughList[index];
-          return _Pages(walkThroughModel: walkThroughModel);
+          return _Pages(
+            walkThroughModel: walkThroughModel,
+            index: index,
+            pageViewController: pageViewController,
+            totalPage: widget.walkThroughList.length,
+            onPressed: widget.onPressed,
+          );
         },
       ),
     );
   }
 }
 
-class _Pages extends StatelessWidget {
+class _Pages extends StatefulWidget {
   const _Pages({
     Key? key,
     required this.walkThroughModel,
+    required this.index,
+    required this.pageViewController,
+    required this.totalPage,
+    required this.onPressed,
   }) : super(key: key);
 
   final WalkThroughModel walkThroughModel;
+  final int index;
+  final PageController pageViewController;
+  final int totalPage;
+  final VoidCallback onPressed;
+
+  @override
+  State<_Pages> createState() => _PagesState();
+}
+
+class _PagesState extends State<_Pages> {
+  changePage(int pageIndex) {
+    widget.pageViewController.animateToPage(
+      pageIndex,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.easeIn,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +75,9 @@ class _Pages extends StatelessWidget {
       children: [
         Expanded(
           flex: 7,
-          child: Image.network(
-            walkThroughModel.image ?? '',
+          child: FadeInImage.assetNetwork(
+            placeholder: 'assets/images/test.png',
+            image: widget.walkThroughModel.image ?? '',
             width: MediaQuery.of(context).size.width,
             fit: BoxFit.cover,
           ),
@@ -54,7 +89,7 @@ class _Pages extends StatelessWidget {
               Container(
                 alignment: Alignment.centerRight,
                 color: walkThroughEnumToColor(
-                    walkThroughModel.titleColor ?? 'blue'),
+                    widget.walkThroughModel.countryColor ?? 'blue'),
                 padding: const EdgeInsets.all(8.0),
                 width: MediaQuery.of(context).size.width,
                 height: MediaQuery.of(context).size.height * 0.06,
@@ -64,10 +99,11 @@ class _Pages extends StatelessWidget {
                       flex: 6,
                       child: Center(
                         child: Text(
-                          walkThroughModel.country?.toUpperCase() ?? '',
-                          style: const TextStyle(
-                            color: Colors.white,
-                          ),
+                          widget.walkThroughModel.country?.toUpperCase() ?? '',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headline6
+                              ?.copyWith(color: Colors.white),
                         ),
                       ),
                     ),
@@ -95,10 +131,16 @@ class _Pages extends StatelessWidget {
                           ),
                           Flexible(
                             child: Padding(
-                              padding: const EdgeInsets.only(left: 5),
+                              padding: const EdgeInsets.only(left: 5, top: 10),
                               child: Text(
-                                walkThroughModel.description ?? '',
+                                widget.walkThroughModel.description ?? '',
                                 textAlign: TextAlign.justify,
+                                maxLines: 10,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyText1
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
@@ -106,9 +148,11 @@ class _Pages extends StatelessWidget {
                       ),
                     ),
                     Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.network(
-                          walkThroughModel.mapImage ?? '',
+                        FadeInImage.assetNetwork(
+                          placeholder: 'assets/images/test.png',
+                          image: widget.walkThroughModel.mapImage ?? '',
                           width: MediaQuery.of(context).size.width * 0.4,
                         ),
                         Container(
@@ -117,16 +161,19 @@ class _Pages extends StatelessWidget {
                           ),
                           width: MediaQuery.of(context).size.width * 0.4,
                           child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
+                              //TODO: change button Color
                               ElevatedButton(
-                                onPressed: () {},
+                                onPressed: widget.onPressed,
                                 child: const Text('Skip'),
                               ),
-                              ElevatedButton(
-                                onPressed: () {},
-                                child: const Text('Next'),
-                              ),
+                              if (widget.index < widget.totalPage - 1)
+                                ElevatedButton(
+                                  onPressed: () => changePage(widget.index + 1),
+                                  child: const Text('Next'),
+                                ),
                             ],
                           ),
                         ),

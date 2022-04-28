@@ -18,15 +18,13 @@ class WalkThroughModel {
   String? mapImage;
   String? country;
   String? description;
-  String? title;
-  String? titleColor;
+  String? countryColor;
 
   WalkThroughModel({
     this.image,
     this.mapImage,
     this.country,
     this.description,
-    this.title,
-    this.titleColor,
+    this.countryColor,
   });
 }
